@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 from sklearn.cross_validation import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.datasets import make_multilabel_classification
 
 # load the dataset of ssq
 data = pd.read_csv('/Users/chyc/Workspaces/Data/lottery/ssq.num',
