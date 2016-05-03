@@ -149,6 +149,29 @@ class GA(Exception):
 
         return [tour1, tour2]
 
+    @staticmethod
+    def DM(tour=[]):
+        """替换变异（Displacement Mutation， DM）"""
+        # 定义两个cut点
+        tour_length = len(tour)
+        cutPoint1 = random.randint(0, tour_length - 2)
+        cutPoint2 = random.randint(cutPoint1 + 1, tour_length - 1)
+        print '## Cut point1: %d and point2: %d' % (cutPoint1, cutPoint2)
+
+        cut_tour = tour[cutPoint1: cutPoint2 + 1]
+        print '## Cut tour: '
+        print cut_tour
+
+        remain_tour = filter(lambda x: x not in cut_tour, tour)
+
+        position = random.randint(0, len(remain_tour) - 1)
+        print '## Insert position: %d' % position
+        tour = remain_tour[0: position]
+        tour.extend(cut_tour)
+        tour.extend(remain_tour[position:len(remain_tour)])
+
+        return tour
+
     def evolve(self, g=0):
         selectionP = [0.0 for row in range(self.N)]
         total_fitness = 0.0
@@ -182,175 +205,53 @@ class GA(Exception):
 
                 children.append(self.chromosomes[selectionCity].clone())
 
-            # 交叉操作(OX1)
+            # 交叉操作
             print '## Start crossover:'
             if random.random < self.p_c_t:
+                """次序交叉法1（Order Crossover， OX1）"""
                 [tour1, tour2] = self.OX1(tour1=children[0].tour, tour2=children[1].tour)
                 children[0].tour = tour1
                 children[1].tour = tour2
-                # # 定义两个cut点
-                # cutPoint1 = -1
-                # cutPoint2 = -1
-                # r1 = random.randint(self.cityNum - 1)
-                # if 0 < r1 < self.cityNum - 1:
-                #     cutPoint1 = r1
-                #     cutPoint2 = random.randint(r1 + 1, self.cityNum - 1)
-                #
-                # if cutPoint1 > 0 and cutPoint2 > 0:
-                #     print '## Cut point1: %d and point2: %d' % (cutPoint1, cutPoint2)
-                #     tour1 = [-1 for row in range(self.cityNum)]
-                #     tour2 = [-1 for row in range(self.cityNum)]
-                #     if cutPoint2 == self.cityNum - 1:
-                #         tour1 = children[0].tour
-                #         tour2 = children[1].tour
-                #     else:
-                #         for j in range(self.cityNum):
-                #             if j < cutPoint1:
-                #                 tour1[j] = children[0].tour[j]
-                #                 tour2[j] = children[1].tour[j]
-                #             elif cutPoint1 <= j < cutPoint1 + self.cityNum - cutPoint2 - 1:
-                #                 tour1[j] = children[0].tour[j + cutPoint2 - cutPoint1 + 1]
-                #                 tour2[j] = children[1].tour[j + cutPoint2 - cutPoint1 + 1]
-                #             else:
-                #                 tour1[j] = children[0].tour[j - self.cityNum + cutPoint2 + 1]
-                #                 tour2[j] = children[1].tour[j - self.cityNum + cutPoint2 + 1]
-                #
-                #     print '## The two tours are:'
-                #     print tour1
-                #     print tour2
-                #
-                #     for j in range(self.cityNum):
-                #         if j < cutPoint1 or j > cutPoint2:
-                #             children[0].tour[j] = -1
-                #             children[1].tour[j] = -1
-                #         else:
-                #             tmp = children[0].tour[j]
-                #             children[0].tour[j] = children[1].tour[j]
-                #             children[1].tour[j] = tmp
-                #
-                #     print '## The tours of two children: '
-                #     print children[0].tour
-                #     print children[1].tour
-                #
-                #     if cutPoint2 == self.cityNum - 1:
-                #         position = 0
-                #         for j in range(cutPoint1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour1[m] == children[0].tour[n]:
-                #                 #         flag = False
-                #                 #         break
-                #                 if tour1[m] in children[0].tour:
-                #                     children[0].tour[j] = tour1[m]
-                #                     position = m + 1
-                #                     break
-                #
-                #         position = 0
-                #         for j in range(cutPoint1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour2[m] == children[1].tour[n]:
-                #                 #         flag = False
-                #                 #         break
-                #                 # if flag:
-                #                 if tour1[m] in children[0].tour:
-                #                     children[1].tour[j] = tour2[m]
-                #                     position = m + 1
-                #                     break
-                #     else:
-                #         position = 0
-                #         for j in range(cutPoint2 + 1, self.cityNum, 1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour1[m] == children[0].tour[n]
-                #                 #         flag = False
-                #                 #         break
-                #                 # if flag:
-                #                 if tour1[m] in children[0].tour:
-                #                     children[0].tour[j] = tour1[m]
-                #                     position = m + 1
-                #                     break
-                #
-                #         for j in range(cutPoint1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour1[m] = children[0].tour[n]:
-                #                 #         flag = False
-                #                 #         break
-                #                 # if flag:
-                #                 if tour1[m] in children[0].tour:
-                #                     children[0].tour[j] = tour1[m]
-                #                     position = m + 1
-                #                     break
-                #
-                #         position = 0
-                #         for j in range(cutPoint2 + 1, self.cityNum, 1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour2[m] == children[1].tour[n]:
-                #                 #         flag = False
-                #                 #         break
-                #                 # if flag:
-                #                 if tour1[m] in children[1].tour:
-                #                     children[i].tour[j] = tour2[m]
-                #                     position = m + 1
-                #                     break
-                #         for j in range(cutPoint1):
-                #             for m in range(position, self.cityNum, 1):
-                #                 # flag = True
-                #                 # for n in range(self.cityNum):
-                #                 #     if tour2[m] == children[1].tour[n]:
-                #                 #         flag = False
-                #                 #         break
-                #                 # if flag:
-                #                 if tour1[m] in children[1].tour:
-                #                     children[1].tour[j] = tour2[m]
-                #                     position = m + 1
-                #                     break
 
             # 变异操作(DM)
             print '## Start mutation:'
             if random.random() < self.p_m_t:
                 for j in [0, 1]:
-                    # 定义两个cut点
-                    cutPoint1 = -1
-                    cutPoint2 = -1
-                    r1 = random.randint(self.cityNum - 1)
-                    if 0 < r1 < self.cityNum - 1:
-                        cutPoint1 = r1
-                        cutPoint2 = random.randint(r1 + 1, self.cityNum - 1)
-
-                    if cutPoint1 > 0 and cutPoint2 > 0:
-                        tour = []
-                        if cutPoint2 == self.cityNum - 1:
-                            tour.extend(children[j].tour[0: cutPoint1])
-                            # for k in range(cutPoint1)
-                            #     tour.append(children[j].tour[k])
-                        else:
-                            tour.extend(children[j].tour[0: cutPoint1])
-                            tour.extend(children[j].tour[cutPoint2 + 1: self.cityNum])
-                            # for k in range(self.cityNum):
-                            #     if k < cutPoint1 or k > cutPoint2:
-                            #         tour.append(children[j].tour[k])
-
-                    position = random.randint(len(tour) - 1)
-                    if position == 0:
-                        for k in range(cutPoint1, cutPoint2 + 1, 1):
-                            tour.insert(0, children[j].tour[cutPoint1 + cutPoint2 - k])
-                    elif position == len(tour) - 1:
-                        tour.extend(children[j].tour[cutPoint1: cutPoint2 + 1])
-                        # for k in range(cutPoint1, cutPoint2 + 1, 1):
-                        #     tour.append(children[j].tour[k])
-                    else:
-                        for k in range(cutPoint1, cutPoint2 + 1, 1):
-                            tour.insert(position, children[j].tour[k])
-
-                    children[j] = tour
+                    children[j].tour = self.DM(tour=children[j].tour)
+                    # # 定义两个cut点
+                    # cutPoint1 = -1
+                    # cutPoint2 = -1
+                    # r1 = random.randint(self.cityNum - 1)
+                    # if 0 < r1 < self.cityNum - 1:
+                    #     cutPoint1 = r1
+                    #     cutPoint2 = random.randint(r1 + 1, self.cityNum - 1)
+                    #
+                    # if cutPoint1 > 0 and cutPoint2 > 0:
+                    #     tour = []
+                    #     if cutPoint2 == self.cityNum - 1:
+                    #         tour.extend(children[j].tour[0: cutPoint1])
+                    #         # for k in range(cutPoint1)
+                    #         #     tour.append(children[j].tour[k])
+                    #     else:
+                    #         tour.extend(children[j].tour[0: cutPoint1])
+                    #         tour.extend(children[j].tour[cutPoint2 + 1: self.cityNum])
+                    #         # for k in range(self.cityNum):
+                    #         #     if k < cutPoint1 or k > cutPoint2:
+                    #         #         tour.append(children[j].tour[k])
+                    #
+                    # position = random.randint(len(tour) - 1)
+                    # if position == 0:
+                    #     for k in range(cutPoint1, cutPoint2 + 1, 1):
+                    #         tour.insert(0, children[j].tour[cutPoint1 + cutPoint2 - k])
+                    # elif position == len(tour) - 1:
+                    #     tour.extend(children[j].tour[cutPoint1: cutPoint2 + 1])
+                    #     # for k in range(cutPoint1, cutPoint2 + 1, 1):
+                    #     #     tour.append(children[j].tour[k])
+                    # else:
+                    #     for k in range(cutPoint1, cutPoint2 + 1, 1):
+                    #         tour.insert(position, children[j].tour[k])
+                    #
+                    # children[j] = tour
 
             self.nextGeneration[i] = children[0]
             self.nextGeneration[i + 1] = children[j]
@@ -398,6 +299,8 @@ def main(argv=None):
             [tour1, tour2] = GA.OX1(tour1=[1, 2, 3, 4, 5, 6, 7, 8], tour2=[2, 4, 6, 8, 7, 5, 3, 1])
             print tour1
             print tour2
+            tour = GA.DM(tour=[1, 2, 3, 4, 5, 6, 7, 8])
+            print tour
         except getopt.error, msg:
             raise Usage(msg)
             # more code, unchanged
