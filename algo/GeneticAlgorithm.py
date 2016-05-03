@@ -164,6 +164,20 @@ def main(argv=None):
     try:
         try:
             opts, args = getopt.getopt(argv[1:], "h", ["help"])
+
+            order_list = [
+                [31, 52, 49, 47],
+                [21, 17, 31, 51],
+                [11, 36, 52, 27],
+                [16, 8, 7, 27],
+                [52, 58, 37, 38],
+                [23, 25, 48, 56],
+                [32, 47, 63, 62],
+                [43, 69, 22, 35],
+                [29, 32, 55, 28],
+                [20, 47, 43, 62]
+            ]
+
             ga = GeneticAlgorithm(pop_size=20, chromo_size=16, generation_size=200, cross_rate=0.8, mutate_rate=0.1, elitism=True)
             ga.run()
             print

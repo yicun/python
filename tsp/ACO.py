@@ -19,7 +19,7 @@ class Ant:
     alpha = 0.0
     beta = 0.0
 
-    tourLength = float()  # 路径长度
+    tourLength = sys.float_info.max  # 路径长度
     cityNum = 0  # 城市数量
     firstCity = 0  # 起始城市
     currentCity = 0  # 当前城市
@@ -36,19 +36,22 @@ class Ant:
         self.delta = [[0 for col in range(self.cityNum)] for row in range(self.cityNum)]
         self.allowedCities = range(0, self.cityNum, 1)
 
-        self.firstCity = random.nextInt(self.cityNum)
+        self.firstCity = random.randint(0, self.cityNum - 1)
         self.allowedCities.remove(self.firstCity)
-        self.tabu.add(self.firstCity)
+        self.tabu.append(self.firstCity)
         self.currentCity = self.firstCity
 
     def selectNextCity(self, pheromone=[[]]):
+        if len(self.allowedCities) == 0:
+            return
+
         p = [0 for col in range(self.cityNum)]
         sumPh = 0.0
         # 计算分母部分
         for i in self.allowedCities:
             sumPh += pow(pheromone[self.currentCity][i], self.alpha) * pow(1.0 / self.distance[self.currentCity][i], self.beta)
         # 计算概率矩阵
-        for i in range(0, self.cityNum, 0):
+        for i in range(self.cityNum):
             flag = False
             for j in self.allowedCities:
                 if i == j:
@@ -60,9 +63,9 @@ class Ant:
 
         # 轮盘赌选择下一个城市
         selectP = random.random()
-        selectCity = 0
+        selectCity = -1
         sum1 = 0.0
-        for i in range(0, self.cityNum, 0):
+        for i in range(self.cityNum):
             sum1 += p[i]
             if sum1 >= selectP:
                 selectCity = i
@@ -71,18 +74,22 @@ class Ant:
         # 从允许选择的城市中去除selectCity
         self.allowedCities.remove(selectCity)
         # 在禁忌表中添加selectCity
-        self.tabu.add(selectCity)
+        self.tabu.append(selectCity)
         # 将当前城市改为选择的城市
         self.currentCity = selectCity
 
     def calculateTourLength(self):
         tourLen = 0
-        for i in range(0, self.cityNum, 0):
+        for i in range(self.cityNum):
             tourLen += self.distance[self.tabu[i]][self.tabu[i + 1]]
         return tourLen
 
+    def getTourLength(self):
+        self.tourLength = self.calculateTourLength()
+        return self.tourLength
 
-class AntColonyOptimization(Exception):
+
+class ACO(Exception):
     ants = []  # 蚂蚁
     antNum = 0  # 蚂蚁数量
     cityNum = 0  # 城市数量
@@ -109,16 +116,17 @@ class AntColonyOptimization(Exception):
     def init(self, filename=None):
         if filename is None:
             return
-        X = [0.0 for col in range(self.cityNum)]
-        Y = [0.0 for col in range(self.cityNum)]
+        x = []
+        y = []
 
         for line in open(filename):
-            [x, y] = line.split(',')
-            X.append(float(x))
-            Y.append(float(y))
+            [id, xx, yy] = line.split(' ')
+            x.append(float(xx))
+            y.append(float(yy))
         # 计算距离矩阵 ，针对具体问题，距离计算方法也不一样，此处用的是att48作为案例，它有48个城市，距离计算方法为伪欧氏距离，最优值为10628
+        self.distance = [[0.0 for col in range(self.cityNum)] for row in range(self.cityNum)]
         for i in range(self.cityNum - 1):
-            self.distance[i][j] = 0.0
+            self.distance[i][i] = 0.0
             for j in range(i, self.cityNum):
                 rij = sqrt(((x[i] - x[j]) ** 2 + (y[i] - y[j]) ** 2) / 10.0)
                 tij = int(rij)
@@ -132,13 +140,13 @@ class AntColonyOptimization(Exception):
 
         # 初始化信息素矩阵, 初始化为0.1
         self.pheromone = [[0.1 for col in range(self.cityNum)] for row in range(self.cityNum)]
-        self.bestLength = float.MAX_VALUE
+        self.bestLength = sys.float_info.max
         self.bestTour = [0 for col in range(self.cityNum + 1)]
 
         # 随机放置蚂蚁
         for i in range(self.antNum):
-            ants[i] = Ant(cityNum=self.cityNum)
-            ants[i].init(distance=self.distance, alpha=self.alpha, beta=self.beta)
+            self.ants[i] = Ant(cityNum=self.cityNum)
+            self.ants[i].init(distance=self.distance, alpha=self.alpha, beta=self.beta)
 
     def solve(self):
         for g in range(self.MAX_GEN):
@@ -146,14 +154,14 @@ class AntColonyOptimization(Exception):
                 for j in range(self.cityNum):
                     self.ants[i].selectNextCity(pheromone=self.pheromone)
 
-                self.ants[i].tabu.add(self.ants[i].firstCity)
-                if self.ants[i].tourLength < self.bestLength:
-                    self.bestLength = self.ants[i].tourLength
+                self.ants[i].tabu.append(self.ants[i].firstCity)
+                if self.ants[i].getTourLength() < self.bestLength:
+                    self.bestLength = self.ants[i].getTourLength()
                     self.bestTour = self.ants[i].tabu
 
                 for j in range(self.cityNum):
-                    self.ants[i].delta[self.ants[i].tabu[j]][self.ants[i].tabu[j + 1]] = 1.0 / self.ants[i].tourLength
-                    self.ants[i].delta[self.ants[i].tabu[j + 1]][self.ants[i].tabu[j]] = 1.0 / self.ants[i].tourLength
+                    self.ants[i].delta[self.ants[i].tabu[j]][self.ants[i].tabu[j + 1]] = 1.0 / self.ants[i].getTourLength()
+                    self.ants[i].delta[self.ants[i].tabu[j + 1]][self.ants[i].tabu[j]] = 1.0 / self.ants[i].getTourLength()
 
             # 更新信息素
             self.updatePheromone()
@@ -162,6 +170,9 @@ class AntColonyOptimization(Exception):
             for i in range(self.antNum):
                 self.ants[i].init(distance=self.distance, alpha=self.alpha, beta=self.beta)
 
+            # 打印信息
+            self.printOptimal()
+
     def updatePheromone(self):
         # 信息素挥发
         for i in range(self.cityNum):
@@ -169,7 +180,7 @@ class AntColonyOptimization(Exception):
                 self.pheromone[i][j] *= (1 - self.rho)
 
         # 信息素更新
-        for i in range(selfi.cityNum):
+        for i in range(self.cityNum):
             for j in range(self.cityNum):
                 for k in range(self.antNum):
                     self.pheromone[i][j] += self.ants[k].delta[i][j]
@@ -192,8 +203,8 @@ def main(argv=None):
         try:
             opts, args = getopt.getopt(argv[1:], "h", ["help"])
 
-            aco = AntColonyOptimization(cityNum=48, antNum=100, MAX_GEN=1000, alpha=1.0, beta=5.0, rho=0.5)
-            aco.init("c://data.txt")
+            aco = ACO(cityNum=48, antNum=100, MAX_GEN=1000, alpha=1.0, beta=5.0, rho=0.5)
+            aco.init("aco/data.txt")
             aco.solve()
         except getopt.error, msg:
             raise Usage(msg)

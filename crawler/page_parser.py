@@ -9,5 +9,3 @@ print html
 soup = BeautifulSoup(html)
 
 print soup.prettify()
-
-
